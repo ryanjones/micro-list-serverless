@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: micro-list-serverless Storage
+Outputs:
+  DataAccessPolicyArn:
+    Value: !Ref DataAccessPolicy
+  ServicesTableName:
+    Value: !Ref ServicesTable
+Resources:
+  ServicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${AWS::StackName}-Services
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+  DataAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: Read/write access to micro-list-serverless tables
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Query
+              - dynamodb:Scan
+            Resource:
+              - !Join [ '', [ !GetAtt ServicesTable.Arn, '*' ] ]

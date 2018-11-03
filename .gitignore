@@ -1,0 +1,9 @@
+# ignore dependencies
+node_modules
+
+# ignore user config files
+.tm_properties
+
+# ignore artifacts
+/application/dist
+/infrastructure/pkg/master-template-output.yml

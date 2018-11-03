@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: micro-list-serverless Master Stack
+Outputs:
+  UiStackId:
+    Value: !Ref UiStack
+  UiBucketName:
+    Value: !GetAtt UiStack.Outputs.SiteBucketId
+  UiUrl:
+    Value: !GetAtt UiStack.Outputs.SiteBucketWebsiteUrl
+  StorageStackId:
+    Value: !Ref StorageStack
+  ApiStackId:
+    Value: !Ref ApiStack
+  ApiUrl:
+    Value: !GetAtt ApiStack.Outputs.GraphqlApiUrl
+Resources:
+  UiStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./ui.yml
+  StorageStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./storage.yml
+  ApiStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - StorageStack
+    Properties:
+      TemplateURL: ./api.yml
+      Parameters:
+        DataAccessPolicyArn: !GetAtt StorageStack.Outputs.DataAccessPolicyArn
+        ServicesTableName: !GetAtt StorageStack.Outputs.ServicesTableName

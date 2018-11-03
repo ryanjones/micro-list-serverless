@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: micro-list-serverless API
+Parameters:
+  DataAccessPolicyArn:
+    Type: String
+  ServicesTableName:
+    Type: String
+Outputs:
+  GraphqlApiUrl:
+    Value: !GetAtt GraphqlApi.GraphQLUrl
+  GraphqlApiKey:
+    Value: !GetAtt GraphqlApiKey.ApiKey
+Resources:
+  GraphqlApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      Name: !Sub ${AWS::StackName}-GraphQL
+      AuthenticationType: API_KEY
+  GraphqlApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+      ApiId: !GetAtt GraphqlApi.ApiId
+      Expires: 1560816000 # expires June 18, 2019
+  ServicesDataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphqlApi.ApiId
+      Name: !Join [ '_', !Split [ '-', !Sub '${AWS::StackName}_Services' ] ]
+      Type: AMAZON_DYNAMODB
+      ServiceRoleArn: !GetAtt DataAccessRole.Arn
+      DynamoDBConfig:
+        TableName: !Ref ServicesTableName
+        AwsRegion: !Sub ${AWS::Region}
+  DataAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - !Ref DataAccessPolicyArn
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - appsync.amazonaws.com
+  GraphqlSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphqlApi.ApiId
+      DefinitionS3Location: ./schema.graphql
+  QueryListServicesResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn: GraphqlSchema
+    Properties:
+      ApiId: !GetAtt GraphqlApi.ApiId
+      TypeName: Query
+      FieldName: listServices
+      DataSourceName: !GetAtt ServicesDataSource.Name
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "Scan",
+          "limit": #if($context.arguments.limit) $context.arguments.limit #else 10 #end,
+          "nextToken": #if($context.arguments.nextToken) "$context.arguments.nextToken" #else null #end
+        }
+      ResponseMappingTemplate: |
+        {
+          "items": $util.toJson($context.result.items),
+          "nextToken": $util.toJson($context.result.nextToken)
+        }

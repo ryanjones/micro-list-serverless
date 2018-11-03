@@ -1,0 +1,16 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: micro-list-serverless UI
+Outputs:
+  SiteBucketId:
+    Value: !Ref SiteBucket
+  SiteBucketWebsiteUrl:
+    Value: !GetAtt SiteBucket.WebsiteURL
+Resources:
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        # Hack: redirect errors to index.html to work with react-router
+        ErrorDocument: index.html

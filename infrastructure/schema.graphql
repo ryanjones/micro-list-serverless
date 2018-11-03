@@ -1,0 +1,14 @@
+type Query {
+	listServices(limit: Int, nextToken: String): Service
+}
+
+type Service {
+	id: ID!
+	name: String
+	language: String
+	description: String
+}
+
+schema {
+	query: Query
+}
