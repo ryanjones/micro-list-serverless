@@ -1,0 +1,25 @@
+{
+    "micro-list-serverless-StorageStack-EC0AUSZQ6JM6-Services": 
+    [
+        {
+            "PutRequest": {
+                "Item": {
+                    "Id": { "S": "1edb9f57-449c-43a5-9aaf-149bd3809a7a" },
+                    "name": {"S":"Amazon Web Services"},
+                    "language": {"S":"Python"},
+                    "description": {"S":"Awesome super service"}
+                }
+            }
+        },
+        {
+            "PutRequest": {
+                "Item": {
+                    "id": {"S":"1edb9f57-449c-43a5-9aaf-149bd3809999"},
+                    "name": {"S":"Epic Service"},
+                    "language": {"S":"NodeJS"},
+                    "description": {"S":"Awesome epic service"}
+                }
+            }
+        }
+    ]
+}

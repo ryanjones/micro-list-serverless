@@ -12,3 +12,6 @@ deploy:
 
 destroy_stack:
 	aws cloudformation delete-stack --stack-name micro-list-serverless
+
+seed_sample_data:
+	aws dynamodb batch-write-item --request-items file://data/sample_services_data.json
