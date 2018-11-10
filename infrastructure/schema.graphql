@@ -1,5 +1,10 @@
 type Query {
-	listServices(limit: Int, nextToken: String): Service
+	listServices(limit: Int, nextToken: String): PaginatedServices!
+}
+
+type PaginatedServices {
+    services: [Service!]!
+    nextToken: String
 }
 
 type Service {

@@ -1,10 +1,10 @@
 {
-    "micro-list-serverless-StorageStack-EC0AUSZQ6JM6-Services": 
+    "micro-list-serverless-StorageStack-AZIHL3CD0O9F-Services": 
     [
         {
             "PutRequest": {
                 "Item": {
-                    "Id": { "S": "1edb9f57-449c-43a5-9aaf-149bd3809a7a" },
+                    "id": { "S": "1edb9f57-449c-43a5-9aaf-149bd3809a7a" },
                     "name": {"S":"Amazon Web Services"},
                     "language": {"S":"Python"},
                     "description": {"S":"Awesome super service"}

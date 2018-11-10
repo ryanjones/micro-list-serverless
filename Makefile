@@ -7,7 +7,7 @@ package:
 deploy: 
 	aws cloudformation deploy \
 	--template-file './infrastructure/pkg/master-template-output.yml' \
-	--capabilities 'CAPABILITY_IAM' \
+	--capabilities 'CAPABILITY_NAMED_IAM' \
 	--stack-name micro-list-serverless
 
 destroy_stack:

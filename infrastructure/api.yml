@@ -11,11 +11,37 @@ Outputs:
   GraphqlApiKey:
     Value: !GetAtt GraphqlApiKey.ApiKey
 Resources:
+  AppsyncLogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}_appsync_log_role
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+            - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+              - appsync.amazonaws.com
+      Policies:
+      - PolicyName: !Sub ${AWS::StackName}_appsync_log_policy
+        PolicyDocument:
+          Statement:
+          - Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Effect: Allow
+            Resource:
+              - arn:aws:logs:*:*:*
   GraphqlApi:
     Type: AWS::AppSync::GraphQLApi
     Properties:
       Name: !Sub ${AWS::StackName}-GraphQL
       AuthenticationType: API_KEY
+      LogConfig:
+        CloudWatchLogsRoleArn: !GetAtt AppsyncLogRole.Arn
+        FieldLogLevel: ALL
   GraphqlApiKey:
     Type: AWS::AppSync::ApiKey
     Properties:
@@ -62,11 +88,17 @@ Resources:
         {
           "version": "2017-02-28",
           "operation": "Scan",
-          "limit": #if($context.arguments.limit) $context.arguments.limit #else 10 #end,
-          "nextToken": #if($context.arguments.nextToken) "$context.arguments.nextToken" #else null #end
+          #if( ${context.arguments.limit} )
+              ,"limit": ${context.arguments.limit}
+          #end
+          #if( ${context.arguments.nextToken} )
+              ,"nextToken": "${context.arguments.nextToken}"
+          #end
         }
       ResponseMappingTemplate: |
         {
-          "items": $util.toJson($context.result.items),
-          "nextToken": $util.toJson($context.result.nextToken)
+          "services": $util.toJson($context.result.items),
+          #if( ${context.result.nextToken} )
+              ,"nextToken": "${context.result.nextToken}"
+          #end
         }
