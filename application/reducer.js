@@ -6,8 +6,8 @@ import {
 
 const initialState = {
   services: {
-    // items: [],
-    // nextToken: null
+    items: [],
+    nextToken: null
   },
   error: null
 };
@@ -17,7 +17,7 @@ export default function(state = initialState, action) {
     case FETCH_SERVICES_COMPLETE:
       return assign({}, state, {
         services: {
-          items: action.events,
+          items: action.services,
           nextToken: action.nextToken
         },
         error: null

@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 
 import { configureStore } from './store';
 import { configureAmplify } from './amplify';
-// import Layout from './components/layout';
+import Layout from './components/layout';
 
 const store = configureStore();
 configureAmplify();
@@ -16,7 +16,7 @@ document.body.appendChild(root);
 ReactDom.render((
   <Provider store={store}>
     <BrowserRouter>
-      <h1>test</h1>
+      <Layout />
     </BrowserRouter>
   </Provider>
 ), root);

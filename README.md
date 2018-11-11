@@ -2,5 +2,13 @@
  An app that lists out AWS serverless functions
 
 
-# TODO
-- Appsync logging turned on
+
+
+query ListServices {
+  listServices {
+    services {
+      id
+    }
+    nextToken
+  }
+}

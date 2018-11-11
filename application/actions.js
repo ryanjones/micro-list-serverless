@@ -30,8 +30,8 @@ export function fetchServices(nextToken) {
   
           dispatch({
             type: nextToken ? FETCH_MORE_SERVICES_COMPLETE : FETCH_SERVICES_COMPLETE,
-            events: data.listEvents.items,
-            nextToken: data.listEvents.nextToken
+            services: data.listServices.services,
+            nextToken: data.listServices.nextToken
           });
         });
     };
