@@ -7,3 +7,5 @@ node_modules
 # ignore artifacts
 /application/dist
 /infrastructure/pkg/master-template-output.yml
+/config.json
+/dist
