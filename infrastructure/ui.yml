@@ -32,15 +32,16 @@ Resources:
         ErrorDocument: index.html
 
   HostedZone:
-      Type: "AWS::Route53::HostedZone"
-      Properties:
-        Name: !Ref WebsiteDomain
-      DependsOn: SiteBucket
+    Type: "AWS::Route53::HostedZone"
+    Properties:
+      Name: !Ref WebsiteDomain
+    DependsOn: SiteBucket
 
   ZoneWildcardCertificate:
     Type: AWS::CertificateManager::Certificate
     Properties:
       DomainName: !Sub "*.${WebsiteDomain}"
+    ValidationMethod: DNS
 
   WebsiteCloudfrontLoggingBucket:
     Type: "AWS::S3::Bucket"
