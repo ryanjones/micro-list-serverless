@@ -1,16 +1,124 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: micro-list-serverless UI
+
+Parameters: 
+  WebsiteDomain:
+    Type: String
+    Description: The root domain (e.g. cnn.com) of the website
+    Default: micro-serverless.com
+  WebsiteHost:
+    Type: String
+    Description: The website host (e.g. www.cnn.com) for the website
+    Default: www.micro-serverless.com
+  CloudfrontHostedZoneId:
+    Type: String
+    Description: The hosted zone ID to use for Cloudfront distributions
+    Default: Z2FDTNDATAQYW2
 Outputs:
   SiteBucketId:
     Value: !Ref SiteBucket
   SiteBucketWebsiteUrl:
     Value: !GetAtt SiteBucket.WebsiteURL
 Resources:
+
   SiteBucket:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: PublicRead
+      BucketName: !Ref WebsiteDomain
       WebsiteConfiguration:
         IndexDocument: index.html
         # Hack: redirect errors to index.html to work with react-router
         ErrorDocument: index.html
+
+  HostedZone:
+      Type: "AWS::Route53::HostedZone"
+      Properties:
+        Name: !Ref WebsiteDomain
+      DependsOn: SiteBucket
+
+  ZoneWildcardCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Sub "*.${WebsiteDomain}"
+
+  WebsiteCloudfrontLoggingBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Join ['-', [ !Ref WebsiteDomain, 'logs' ] ]
+    DependsOn: SiteBucket
+
+  WebsiteCloudfrontDistribution:
+      Type: "AWS::CloudFront::Distribution"
+      Properties:
+          DistributionConfig:
+              Aliases:
+                  - !Ref WebsiteDomain
+                  - !Ref WebsiteHost
+              Comment: "Distribution CDN for site"
+              DefaultCacheBehavior:
+                  Compress: true
+                  ForwardedValues:
+                      QueryString: false
+                      Cookies:
+                          Forward: "none"
+                  TargetOriginId: "website"
+                  ViewerProtocolPolicy: "redirect-to-https"
+              DefaultRootObject: "index.html"
+              Enabled: true
+              HttpVersion: "http2"
+              IPV6Enabled: true
+              Logging:
+                  Bucket: !Join ['.', [!Ref WebsiteCloudfrontLoggingBucket, 's3.amazonaws.com' ] ]
+              Origins:
+                  -
+                      DomainName: !Join ['.', [!Ref SiteBucket, 's3-website-us-east-1.amazonaws.com' ] ]
+                      Id: "website"
+                      CustomOriginConfig:
+                          HTTPPort: 80
+                          OriginProtocolPolicy: http-only
+              ViewerCertificate:
+                  AcmCertificateArn: !Ref ZoneWildcardCertificate
+                  SslSupportMethod: "sni-only"
+
+  WebsiteAliasRecord:
+      Type: "AWS::Route53::RecordSet"
+      Properties:
+          HostedZoneId: !Ref HostedZone
+          Name: !Ref WebsiteHost
+          Type: A
+          AliasTarget:
+              DNSName: !GetAtt WebsiteCloudfrontDistribution.DomainName
+              HostedZoneId: !Ref CloudfrontHostedZoneId
+
+  WebsiteAliasAAAARecord:
+      Type: "AWS::Route53::RecordSet"
+      Properties:
+          HostedZoneId: !Ref HostedZone
+          Name: !Ref WebsiteHost
+          Type: AAAA
+          AliasTarget:
+              DNSName: !GetAtt WebsiteCloudfrontDistribution.DomainName
+              HostedZoneId: !Ref CloudfrontHostedZoneId
+
+  WebsiteAliasRootRecord:
+      Type: "AWS::Route53::RecordSet"
+      Properties:
+          HostedZoneId: !Ref HostedZone
+          Name: !Ref WebsiteDomain
+          Type: A
+          AliasTarget:
+              DNSName: !GetAtt WebsiteCloudfrontDistribution.DomainName
+              HostedZoneId: !Ref CloudfrontHostedZoneId
+
+  WebsiteAliasRootAAAARecord:
+      Type: "AWS::Route53::RecordSet"
+      Properties:
+          HostedZoneId: !Ref HostedZone
+          Name: !Ref WebsiteDomain
+          Type: AAAA
+          AliasTarget:
+              DNSName: !GetAtt WebsiteCloudfrontDistribution.DomainName
+              HostedZoneId: !Ref CloudfrontHostedZoneId
+
+

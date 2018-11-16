@@ -3,6 +3,9 @@
 
 
 # Instructions
+- Buy domain name:
+- 
+
 - ```make aws_package```
 - ```make aws_deploy```
 - Update ```./config.json``` aws_appsync_graphqlEndpoint & aws_appsync_apiKey
