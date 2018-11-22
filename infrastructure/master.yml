@@ -11,6 +11,8 @@ Outputs:
     Value: !Ref StorageStack
   ApiStackId:
     Value: !Ref ApiStack
+  DnsStackId:
+    Value: !Ref DNSStack
   ApiUrl:
     Value: !GetAtt ApiStack.Outputs.GraphqlApiUrl
 Resources:
@@ -18,6 +20,15 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./ui.yml
+    Parameters:
+      WebsiteDomain: micro-serverless.com
+      WebsiteHost: www.micro-serverless.com
+  DNSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./dns.yml
+      Parameters:
+        CloudfrontDistributionDomainName: !GetAtt UiStack.Outputs.CloudfrontDistributionDomainName
   StorageStack:
     Type: AWS::CloudFormation::Stack
     Properties:
