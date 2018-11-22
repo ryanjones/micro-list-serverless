@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: micro-list-serverless UI
+
+Parameters: 
+  WebsiteDomain:
+    Type: String
+    Description: The root domain (e.g. cnn.com) of the website
+    Default: micro-serverless.com
+  WebsiteHost:
+    Type: String
+    Description: The website host (e.g. www.cnn.com) for the website
+    Default: www.micro-serverless.com
+  CloudfrontHostedZoneId:
+    Type: String
+    Description: The hosted zone ID to use for Cloudfront distributions
+    Default: Z2FDTNDATAQYW2
+
+Outputs:
+  xyz:
+    Value: !Ref SiteBucket
+
+  HostedZone:
+    Type: "AWS::Route53::HostedZone"
+    Properties:
+      Name: !Ref WebsiteDomain
+    DependsOn: SiteBucket
+
+  ZoneWildcardCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Sub "*.${WebsiteDomain}"
+
+  ZoneRootCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref WebsiteDomain
+      
+  WebsiteAliasRecord:
+      Type: "AWS::Route53::RecordSet"
+      Properties:
+          HostedZoneId: !Ref HostedZone
+          Name: !Ref WebsiteHost
+          Type: A
+          AliasTarget:
+              DNSName: !GetAtt WebsiteCloudfrontDistribution.DomainName
+              HostedZoneId: !Ref CloudfrontHostedZoneId
+
+  WebsiteAliasAAAARecord:
+      Type: "AWS::Route53::RecordSet"
+      Properties:
+          HostedZoneId: !Ref HostedZone
+          Name: !Ref WebsiteHost
+          Type: AAAA
+          AliasTarget:
+              DNSName: !GetAtt WebsiteCloudfrontDistribution.DomainName
+              HostedZoneId: !Ref CloudfrontHostedZoneId
+
+  WebsiteAliasRootRecord:
+      Type: "AWS::Route53::RecordSet"
+      Properties:
+          HostedZoneId: !Ref HostedZone
+          Name: !Ref WebsiteDomain
+          Type: A
+          AliasTarget:
+              DNSName: !GetAtt WebsiteCloudfrontDistribution.DomainName
+              HostedZoneId: !Ref CloudfrontHostedZoneId
+
+  WebsiteAliasRootAAAARecord:
+      Type: "AWS::Route53::RecordSet"
+      Properties:
+          HostedZoneId: !Ref HostedZone
+          Name: !Ref WebsiteDomain
+          Type: AAAA
+          AliasTarget:
+              DNSName: !GetAtt WebsiteCloudfrontDistribution.DomainName
+              HostedZoneId: !Ref CloudfrontHostedZoneId
