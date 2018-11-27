@@ -16,13 +16,22 @@ Outputs:
   ApiUrl:
     Value: !GetAtt ApiStack.Outputs.GraphqlApiUrl
 Resources:
+  CertsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./certs.yml
+      Parameters:
+        WebsiteDomain: micro-serverless.com
+        WebsiteHost: www.micro-serverless.com
   UiStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./ui.yml
-    Parameters:
-      WebsiteDomain: micro-serverless.com
-      WebsiteHost: www.micro-serverless.com
+      Parameters:
+        WebsiteDomain: micro-serverless.com
+        WebsiteHost: www.micro-serverless.com
+        ZoneRootCertificateId: !GetAtt CertsStack.Outputs.ZoneRootCertificateId
+        ZoneWildcardCertificateId: !GetAtt CertsStack.Outputs.ZoneWildcardCertificateId
   DNSStack:
     Type: AWS::CloudFormation::Stack
     Properties:

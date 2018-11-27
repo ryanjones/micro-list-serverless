@@ -8,7 +8,9 @@ Parameters:
   WebsiteHost:
     Type: String
     Description: The website host (e.g. www.cnn.com) for the website
-  ZoneWildcardCertificate: 
+  ZoneWildcardCertificateId: 
+    Type: String
+  ZoneRootCertificateId: 
     Type: String
 
 Outputs:
@@ -24,16 +26,25 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: PublicRead
-      BucketName: !Ref WebsiteDomain
+      BucketName: !Ref WebsiteHost
       WebsiteConfiguration:
         IndexDocument: index.html
         # Hack: redirect errors to index.html to work with react-router
         ErrorDocument: index.html
 
+  NakedDomainSiteBucketRedirect:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref WebsiteDomain
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: !Join ['.', ['www', !Ref WebsiteDomain]]
+          Protocol: https
+
   WebsiteCloudfrontLoggingBucket:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: !Join ['-', [ !Ref WebsiteDomain, 'logs' ] ]
+      BucketName: !Join ['-', [ !Ref WebsiteHost, 'logs' ] ]
     DependsOn: SiteBucket
 
   WebsiteCloudfrontDistribution:
@@ -65,7 +76,31 @@ Resources:
                           HTTPPort: 80
                           OriginProtocolPolicy: http-only
               ViewerCertificate:
-                  AcmCertificateArn: !Ref ZoneWildcardCertificate
-                  SslSupportMethod: "sni-only"
+                  AcmCertificateArn: !Ref ZoneWildcardCertificateId
+                  SslSupportMethod: sni-only
 
-
+  NakedCloudfrontDistribution:
+    Type: 'AWS::CloudFront::Distribution'
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref WebsiteDomain
+        Enabled: True
+        Origins:
+          - DomainName: !Select
+              - 1
+              - !Split ["//", !GetAtt SiteBucket.WebsiteURL]
+            Id: origin
+            CustomOriginConfig:
+                HTTPPort: 80
+                OriginProtocolPolicy: http-only
+        DefaultCacheBehavior:
+          TargetOriginId: origin
+          DefaultTTL: 5
+          MaxTTL: 30
+          ForwardedValues:
+            QueryString: false
+          ViewerProtocolPolicy: redirect-to-https
+        ViewerCertificate:
+          AcmCertificateArn: !Ref ZoneRootCertificateId
+          SslSupportMethod: sni-only
